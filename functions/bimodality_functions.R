@@ -298,3 +298,47 @@ plot_bimodal_gene = function(this_gene = NULL, this_expr = NULL, this_cluster = 
   
   return(combined_plot)
 }
+
+
+plot_ranked_expression <- function(this_gene, this_expr, this_cluster) {
+  
+  # Get expression values for the gene
+  gene_expr <- as.numeric(this_expr[this_gene, this_cluster$sample_id])
+  
+  # Create data frame with expression and cluster info
+  plot_data <- data.frame(
+    sample_id = this_cluster$sample_id,
+    expression = gene_expr,
+    cluster = this_cluster$cluster_label,
+    stringsAsFactors = FALSE
+  )
+  
+  # Remove NAs
+  plot_data <- plot_data[!is.na(plot_data$expression), ]
+  
+  # Rank by expression (highest to lowest)
+  plot_data <- plot_data[order(-plot_data$expression), ]
+  plot_data$rank <- 1:nrow(plot_data)
+  
+  # Create the ranked plot
+  p <- ggplot(plot_data, aes(x = rank, y = expression, color = cluster)) +
+    geom_point(size = 5, alpha = 0.8) +
+    geom_line(aes(group = 1), color = "black", alpha = 0.3, size = 0.5) +
+    scale_color_manual(values = c("cluster1" = "#F87B1B", "cluster2" = "#134686")) +
+    labs(
+      title = paste("Ranked Expression:", this_gene),
+      subtitle = "Samples ordered by expression level (highest to lowest)",
+      x = "Sample Rank",
+      y = "Log2 Expression",
+      color = "Cluster"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 12),
+      legend.position = "top",
+      panel.grid.minor = element_blank()
+    )
+  
+  return(p)
+}
